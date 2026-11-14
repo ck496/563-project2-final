@@ -46,6 +46,8 @@ uv run pytest -q
 | `/poison <name>` | witch | witch phase |
 | `/pass` | witch | witch phase |
 
+- Check screenshots for game play
+
 ---
 
 ## Docker run guide
