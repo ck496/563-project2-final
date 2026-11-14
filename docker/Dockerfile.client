@@ -1,0 +1,34 @@
+# --- Build stage: install deps with uv, no dev packages ---
+FROM python:3.13-slim AS builder
+
+# Copy the uv binary from the official image so we don't curl anything
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Set the working directory for the build
+WORKDIR /app
+
+# Copy only dependency files first for layer caching
+COPY pyproject.toml uv.lock ./
+
+# Install production deps only, using the existing lockfile
+RUN uv sync --frozen --no-dev
+
+# --- Runtime stage: slim image with just the app ---
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Bring in the installed virtualenv from the builder
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy only the client package (no server, tests, docs)
+COPY client/ /app/client/
+
+# Put the venv's python on PATH so the module runs
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Default uid for player-1; compose overrides per service (D-15)
+USER 1001
+
+# Exec form so SIGTERM reaches the client directly (D-14)
+CMD ["python", "-m", "client.main"]

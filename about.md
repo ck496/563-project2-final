@@ -1,0 +1,7 @@
+# Werewolves Democracy info
+
+For project 1 I was working on campaign-sim, a game where voters vote to elect candidates. For projects 2/3 I wanted to build a version of Werewolves with the same citizens voting idea. The idea was to have a pool of bot citizens that listen to day chats and vote on who to hang. The players goal would be to try and convince/deceive the citizens or even try things like prompt injections. Unfortunately I could not get the citizens part running in time. So for this one I focused on building Werewolves into service-layer, distributed app that I can hopefully plug the citizens module into by project 4.
+
+The game is built with a FastAPI server that handles routes, services and data. Each player is its own client, sends commands over HTTP, and gets events over SSE streams. When a player joins, a unique auth token issued, each request from then on is first authenticated and then only processed.
+
+Project 1 used UNIX domain stream sockets, this one uses HTTP REST and SSE streams. Another new thing is the isolation, every player runs in its own Docker container with its own Linux user, CPU, memory, and readonly filesystem. All client comms go through commlib.py. Players on different machines can play together, a fork-bomb or resource throttling in ones machine should not affect the game or the other players.  

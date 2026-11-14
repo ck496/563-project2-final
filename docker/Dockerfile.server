@@ -1,0 +1,35 @@
+# --- Build stage: install deps with uv, no dev packages ---
+FROM python:3.13-slim AS builder
+
+# Copy the uv binary from the official image so we don't curl anything
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Set the working directory for the build
+WORKDIR /app
+
+# Copy only dependency files first for layer caching
+COPY pyproject.toml uv.lock ./
+
+# Install production deps only, using the existing lockfile
+RUN uv sync --frozen --no-dev
+
+# --- Runtime stage: slim image with just the app ---
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Bring in the installed virtualenv from the builder
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy only the server package (no client, tests, docs)
+COPY server/ /app/server/
+
+# Put the venv's python on PATH so uvicorn is found
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run as non-root uid 1000
+USER 1000
+
+# Exec form so SIGTERM reaches uvicorn directly (D-14)
+# --no-access-log prevents leaking request timing (L-11)
+CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

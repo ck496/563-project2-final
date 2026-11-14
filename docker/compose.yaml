@@ -1,0 +1,146 @@
+# Werewolves Democracy: one server, six human players, four bots
+# Start all:    docker compose -f docker/compose.yaml up --build
+# Humans only:  docker compose -f docker/compose.yaml up --build server player-1 player-2 player-3 player-4 player-5 player-6
+
+networks:
+  game-net:
+    driver: bridge
+
+# Shared player/bot settings (D-16 isolation limits)
+x-player: &player-defaults
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.client
+  env_file: .env
+  networks: [game-net]
+  depends_on:
+    server:
+      condition: service_healthy
+  # Isolation hardening (L-12, L-14, D-16)
+  read_only: true                         # no writes to the image filesystem
+  tmpfs:
+    - /tmp                                # writable scratch space
+  cap_drop: [ALL]                         # drop every Linux capability
+  security_opt:
+    - no-new-privileges:true              # block setuid escalation
+  pids_limit: 64                          # stop fork bombs
+  mem_limit: 128m                         # cap memory usage
+  cpus: 0.25                              # cap CPU usage
+  logging:
+    driver: none                         
+
+services:
+
+  # --- Game server (the only stateful container) ---
+  server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.server
+    user: "1000"
+    ports:
+      - "8000:8000"                       # publish for host access and /docs
+    env_file: .env
+    networks: [game-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+
+  # --- Human players (attach with: docker attach werewolves-player-1) ---
+  player-1:
+    <<: *player-defaults
+    container_name: werewolves-player-1
+    user: "1001"
+    stdin_open: true                      # keep stdin open for typing
+    tty: true                             # allocate a terminal
+    environment:
+      - WW_NAME=Player1
+
+  player-2:
+    <<: *player-defaults
+    container_name: werewolves-player-2
+    user: "1002"
+    stdin_open: true
+    tty: true
+    environment:
+      - WW_NAME=Player2
+
+  player-3:
+    <<: *player-defaults
+    container_name: werewolves-player-3
+    user: "1003"
+    stdin_open: true
+    tty: true
+    environment:
+      - WW_NAME=Player3
+
+  player-4:
+    <<: *player-defaults
+    container_name: werewolves-player-4
+    user: "1004"
+    stdin_open: true
+    tty: true
+    environment:
+      - WW_NAME=Player4
+
+  player-5:
+    <<: *player-defaults
+    container_name: werewolves-player-5
+    user: "1005"
+    stdin_open: true
+    tty: true
+    environment:
+      - WW_NAME=Player5
+
+  player-6:
+    <<: *player-defaults
+    container_name: werewolves-player-6
+    user: "1006"
+    stdin_open: true
+    tty: true
+    environment:
+      - WW_NAME=Player6
+
+  # --- Bots (no stdin needed, exit 0 when the game ends) ---
+  bot-1:
+    <<: *player-defaults
+    container_name: werewolves-bot-1
+    user: "2001"
+    environment:
+      - WW_BOT=1
+      - WW_NAME=Bot1
+
+  bot-2:
+    <<: *player-defaults
+    container_name: werewolves-bot-2
+    user: "2002"
+    environment:
+      - WW_BOT=1
+      - WW_NAME=Bot2
+
+  bot-3:
+    <<: *player-defaults
+    container_name: werewolves-bot-3
+    user: "2003"
+    environment:
+      - WW_BOT=1
+      - WW_NAME=Bot3
+
+  bot-4:
+    <<: *player-defaults
+    container_name: werewolves-bot-4
+    user: "2004"
+    environment:
+      - WW_BOT=1
+      - WW_NAME=Bot4

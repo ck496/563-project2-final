@@ -1,0 +1,28 @@
+[project]
+name = "werewolves-democracy"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.162.4",
+    "httpx>=0.28.1",
+    "httpx-sse>=0.4.3",
+    "prompt-toolkit>=3.0.53",
+    "pydantic-settings>=2.16.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "ruff>=0.17.4",
+]
+
+# configs apps entry point 
+[tool.fastapi]
+entrypoint = "server.main:app"
+
+# lets tests import the server package from the repo root
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

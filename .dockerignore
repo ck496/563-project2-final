@@ -1,0 +1,12 @@
+.git
+.venv
+.env*
+tests
+docs
+plan
+__pycache__
+.ruff_cache
+*.pyc
+.DS_Store
+.vscode
+.claude
