@@ -9,6 +9,8 @@ See `about.md` for the story behind it.
 
 **Join code:** `ruffruff982` (set in `.env` and `docker/.env`)
 
+ Screenshots of a game are in [`game_screenshots/`](game_screenshots/).
+ 
 ## Local Run Guide (5 players default)
 
 The root `.env` sets a 5 seat game: 2 wolves, 1 witch, 2 townspeople. The game starts
@@ -25,10 +27,10 @@ uv sync
 uv run fastapi run --port 8000
 
 # 3. Join as a player, each player needs their own temrinal.. add 5 more for game to start 
-uv run python -m client.main --name CK --code JOIN_CODE
+uv run python -m client.main --name CK --code ruffruff982
 
 # 3.2. you can also join as a bot. No input needed they make choices from available moves 
-uv run python -m client.main --bot --name bot1 --code JOIN_CODE
+uv run python -m client.main --bot --name bot1 --code ruffruff982
 
 # Run the tests
 uv run pytest -q
@@ -54,7 +56,7 @@ uv run pytest -q
 
 **Note** Need docker engine to be able to run this.
 
-The compose file defines two **images** (`ww-server` and `ww-client`) and multiple **containers**
+The compose file defines two **images** (`docker-server` and `docker-player-N`) and multiple **containers**
     `--build` compiles the images from the Dockerfiles.
     `up` creates and starts the containers. Each container is its own isolated Linux environment with its own uid capped resources etc
 
@@ -114,8 +116,7 @@ docker compose -f docker/compose.yaml up --build server
 
 # Host B point clients at the server's LAN IP
 WW_SERVER_URL=http://<lan-ip>:8000 docker run --rm -it \
-  -e WW_SERVER_URL -e WW_NAME=Chris -e WW_JOIN_CODE=ruffruff982 \
-  werewolves-democracy-player-1
+  -e WW_SERVER_URL -e WW_NAME=Chris -e WW_JOIN_CODE=ruffruff982 player-1
 ```
 
 ---
