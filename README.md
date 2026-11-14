@@ -10,7 +10,7 @@ See `about.md` for the story behind it.
 **Join code:** `ruffruff982` (set in `.env` and `docker/.env`)
 
  Screenshots of a game are in [`game_screenshots/`](game_screenshots/).
- 
+
 ## Local Run Guide (5 players default)
 
 The root `.env` sets a 5 seat game: 2 wolves, 1 witch, 2 townspeople. The game starts
@@ -26,7 +26,7 @@ uv sync
 # 2. Start the server 
 uv run fastapi run --port 8000
 
-# 3. Join as a player, each player needs their own temrinal.. add 5 more for game to start 
+# 3. Join as a player, each player needs their own temrinal.. add 4 more for game to start 
 uv run python -m client.main --name CK --code ruffruff982
 
 # 3.2. you can also join as a bot. No input needed they make choices from available moves 
@@ -87,7 +87,7 @@ docker attach werewolves-player-4
 docker attach werewolves-player-5   
 docker attach werewolves-player-6   
 
-# Ctrl-Q to detach without stopping the container
+# Ctrl-P thenCtrl-Q to detach without stopping the container. And you can attatch back and resume 
 ```
 
 ### Stopping and cleaning up
@@ -114,9 +114,10 @@ Run the server on one host, clients on another:
 # Host A server only
 docker compose -f docker/compose.yaml up --build server
 
-# Host B point clients at the server's LAN IP
-WW_SERVER_URL=http://<lan-ip>:8000 docker run --rm -it \
-  -e WW_SERVER_URL -e WW_NAME=Chris -e WW_JOIN_CODE=ruffruff982 player-1
+# Host B: build the client image, then point it at Host A
+docker compose -f docker/compose.yaml build player-1
+docker run --rm -it -e WW_SERVER_URL=http://<lan-ip>:8000 \
+  -e WW_NAME=robie -e WW_JOIN_CODE=ruffruff982 docker-player-1
 ```
 
 ---
